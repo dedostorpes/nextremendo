@@ -47,7 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const gananciaSocio = precioUnitario + (precioVenta * (porcentaje / 100));
     const gananciaTuya = precioVenta - gananciaSocio;
 
-    // Agregar la fila a la hoja de ventas
     const fechaHoy = new Date().toISOString().split('T')[0];
 
     await sheets.spreadsheets.values.append({
@@ -69,7 +68,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    // Marcar como VENDIDO en la hoja Stock
     const filaGoogleSheet = index + 2;
     await sheets.spreadsheets.values.update({
       spreadsheetId,

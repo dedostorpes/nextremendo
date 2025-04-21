@@ -1,194 +1,136 @@
-import { useEffect, useState } from 'react';
-import styles from './RegistrarVenta.module.css';
 
-interface Libro {
-  titulo: string;
-  autor: string;
-  proveedor: string;
-  precioUnitario: string;
-  porcentajeSocio: string;
-}
+import { useEffect, useState } from 'react';
+import { CheckCircle, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
 
 export default function RegistrarVenta() {
-  const [libros, setLibros] = useState<Libro[]>([]);
+  const [librosVendidos, setLibrosVendidos] = useState<any[]>([]);
   const [titulo, setTitulo] = useState('');
   const [autor, setAutor] = useState('');
   const [proveedor, setProveedor] = useState('');
-  const [precioUnitario, setPrecioUnitario] = useState('');
-  const [porcentajeSocio, setPorcentajeSocio] = useState('');
-  const [sugerencias, setSugerencias] = useState<Libro[]>([]);
-  const [ventaRegistrada, setVentaRegistrada] = useState('');
-  const [mostrarDropdown, setMostrarDropdown] = useState(false);
-  const [indiceSeleccionado, setIndiceSeleccionado] = useState<number>(-1);
+  const [precioVenta, setPrecioVenta] = useState('');
+  const [canal, setCanal] = useState('Local');
 
-  useEffect(() => {
-    fetch('/api/stock')
-      .then(res => res.json())
-      .then(data => setLibros(data));
-  }, []);
-
-  useEffect(() => {
-    const coincidencia = libros.find(libro =>
-      libro.titulo.trim().toLowerCase() === titulo.trim().toLowerCase()
-    );
-    if (coincidencia) {
-      setAutor(coincidencia.autor);
-      setProveedor(coincidencia.proveedor);
-      setPrecioUnitario(coincidencia.precioUnitario);
-      setPorcentajeSocio(coincidencia.porcentajeSocio);
-    }
-  }, [titulo, libros]);
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value;
-    setTitulo(valor);
-    if (valor.length > 1) {
-      const matches = libros.filter(libro =>
-        libro.titulo.toLowerCase().includes(valor.toLowerCase())
-      );
-      setSugerencias(matches);
-      setMostrarDropdown(true);
-    } else {
-      setSugerencias([]);
-      setMostrarDropdown(false);
-    }
-    setIndiceSeleccionado(-1);
-  };
-
-  const handleSeleccion = (libro: Libro) => {
-    setTitulo(libro.titulo);
-    setAutor(libro.autor);
-    setProveedor(libro.proveedor);
-    setPrecioUnitario(libro.precioUnitario);
-    setPorcentajeSocio(libro.porcentajeSocio);
-    setSugerencias([]);
-    setMostrarDropdown(false);
-    setIndiceSeleccionado(-1);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key === 'Enter') {
-      if (indiceSeleccionado >= 0 && sugerencias[indiceSeleccionado]) {
-        e.preventDefault();
-        handleSeleccion(sugerencias[indiceSeleccionado]);
-      } else {
-        e.preventDefault();
-        registrarVenta();
-      }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setIndiceSeleccionado(prev =>
-        prev < sugerencias.length - 1 ? prev + 1 : 0
-      );
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setIndiceSeleccionado(prev =>
-        prev > 0 ? prev - 1 : sugerencias.length - 1
-      );
-    }
-  };
-
-  const registrarVenta = async () => {
-    if (!titulo || !autor || !proveedor || !precioUnitario || !porcentajeSocio) {
-      alert('Faltan datos obligatorios.');
+  const handleSubmit = async () => {
+    if (!titulo || !autor || !proveedor || !precioVenta || !canal) {
+      toast({
+        title: 'Error',
+        description: 'Faltan datos obligatorios.',
+        variant: 'destructive',
+      });
       return;
     }
 
-    const res = await fetch('/api/ventas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        titulo,
-        autor,
-        proveedor,
-        precioUnitario,
-        porcentajeSocio
-      })
-    });
+    try {
+      const res = await fetch('/api/ventas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ titulo, autor, proveedor, precioVenta, canal }),
+      });
 
-    if (res.ok) {
-      setVentaRegistrada(`✅ Venta registrada: ${titulo}`);
-      setTitulo('');
-      setAutor('');
-      setProveedor('');
-      setPrecioUnitario('');
-      setPorcentajeSocio('');
-      setTimeout(() => setVentaRegistrada(''), 5000);
+      const data = await res.json();
+      if (res.ok) {
+        setLibrosVendidos([...librosVendidos, { titulo, autor, proveedor, precioVenta, canal }]);
+        setTitulo('');
+        setAutor('');
+        setProveedor('');
+        setPrecioVenta('');
+        toast({
+          title: '✅ Venta registrada correctamente.',
+          description: `${titulo} - $${precioVenta}`,
+        });
+      } else {
+        toast({
+          title: 'Error al registrar la venta',
+          description: data.message || 'Ocurrió un error inesperado.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error de red',
+        description: 'No se pudo conectar al servidor.',
+        variant: 'destructive',
+      });
     }
   };
 
+  const handleRemove = (index: number) => {
+    const updated = [...librosVendidos];
+    const removed = updated.splice(index, 1)[0];
+    setLibrosVendidos(updated);
+    toast({
+      title: 'Libro eliminado de la sesión',
+      description: removed.titulo,
+    });
+  };
+
   return (
-    <main className={styles.container}>
-      <h1 className={styles.titulo}>Registrar Venta</h1>
-      <form className={styles.formulario} onKeyDown={handleKeyDown}>
-        <label>Título del libro:</label>
-        <div className={styles.autocompletarWrapper}>
-          <input
-            type="text"
-            value={titulo}
-            onChange={handleInput}
-            className={styles.input}
-            placeholder="Escribí el título..."
-            autoComplete="off"
-            onFocus={() => setMostrarDropdown(sugerencias.length > 0)}
-            onBlur={() => setTimeout(() => setMostrarDropdown(false), 200)}
-          />
-          {mostrarDropdown && sugerencias.length > 0 && (
-            <ul className={styles.sugerencias}>
-              {sugerencias.map((libro, i) => (
-                <li
-                  key={i}
-                  onClick={() => handleSeleccion(libro)}
-                  style={{
-                    backgroundColor: i === indiceSeleccionado ? '#eef6ff' : 'white'
-                  }}
-                >
-                  <strong>{libro.titulo}</strong><br />
-                  <small>{libro.autor} — {libro.proveedor}</small>
-                </li>
-              ))}
-            </ul>
-          )}
+    <div className="max-w-xl mx-auto mt-10">
+      <h1 className="text-2xl font-bold mb-6 text-center">Registrar venta</h1>
+
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="titulo">Título</Label>
+          <Input id="titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
         </div>
+        <div>
+          <Label htmlFor="autor">Autor</Label>
+          <Input id="autor" value={autor} onChange={(e) => setAutor(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="proveedor">Proveedor</Label>
+          <Input id="proveedor" value={proveedor} onChange={(e) => setProveedor(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="precio">Precio de venta</Label>
+          <Input id="precio" type="number" value={precioVenta} onChange={(e) => setPrecioVenta(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="canal">Canal</Label>
+          <Select value={canal} onValueChange={setCanal}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona canal" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Local">Local</SelectItem>
+              <SelectItem value="Web">Web</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={handleSubmit}>Registrar venta</Button>
+      </div>
 
-        <label>Autor:</label>
-        <input
-          type="text"
-          value={autor}
-          onChange={e => setAutor(e.target.value)}
-          className={styles.input}
-        />
-
-        <label>Proveedor:</label>
-        <input
-          type="text"
-          value={proveedor}
-          onChange={e => setProveedor(e.target.value)}
-          className={styles.input}
-        />
-
-        <label>Precio unitario:</label>
-        <input
-          type="text"
-          value={precioUnitario}
-          onChange={e => setPrecioUnitario(e.target.value)}
-          className={styles.input}
-        />
-
-        <label>% del socio:</label>
-        <input
-          type="text"
-          value={porcentajeSocio}
-          onChange={e => setPorcentajeSocio(e.target.value)}
-          className={styles.input}
-        />
-
-        <button type="button" onClick={registrarVenta} className={styles.boton}>
-          Registrar venta
-        </button>
-
-        {ventaRegistrada && <p className={styles.exito}>{ventaRegistrada}</p>}
-      </form>
-    </main>
+      {librosVendidos.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-lg font-bold mb-4">Libros registrados en esta sesión:</h2>
+          <ul className="space-y-2">
+            {librosVendidos.map((libro, index) => (
+              <li key={index} className="border rounded p-3 flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">{libro.titulo}</p>
+                  <p className="text-sm text-gray-500">{libro.autor} | {libro.proveedor}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => handleRemove(index)}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
