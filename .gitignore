@@ -35,4 +35,4 @@ pnpm-debug.log*
 
 /config/credentials.json
 
-/.env
+.env
