@@ -3,26 +3,27 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: sans-serif;
-  background: #f8f9fa;
-  border-radius: 10px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.1);
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .titulo {
   font-size: 24px;
-  margin-bottom: 1.5rem;
+  font-weight: bold;
   text-align: center;
+  margin-bottom: 1.5rem;
 }
 
 .formulario {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
 .input {
   padding: 12px;
   font-size: 16px;
-  margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   width: 100%;
@@ -36,7 +37,7 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  margin-top: 0.5rem;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .boton:hover {
@@ -44,19 +45,18 @@
 }
 
 .sugerencias {
-  background: white;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: white;
   border: 1px solid #ccc;
   border-radius: 6px;
-  margin-top: -0.5rem;
-  margin-bottom: 1rem;
   max-height: 200px;
   overflow-y: auto;
-  list-style: none;
-  padding-left: 0;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   position: absolute;
+  z-index: 999;
   width: 100%;
-  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .sugerencias li {
@@ -65,12 +65,12 @@
 }
 
 .sugerencias li:hover {
-  background: #e0f0ff;
+  background-color: #eef6ff;
 }
 
 .exito {
   color: green;
-  margin-top: 1rem;
   font-weight: bold;
   text-align: center;
+  margin-top: 1rem;
 }

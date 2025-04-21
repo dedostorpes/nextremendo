@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .filter(row => row[11] !== 'VENDIDO') // columna "Vendido"
       .map(row => ({
         titulo: row[6] || '',
+        autor: row[7] || '',
         proveedor: row[1] || '',
         precioUnitario: row[3] || '',
         porcentajeSocio: row[5] || '',
